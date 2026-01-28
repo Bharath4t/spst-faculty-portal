@@ -1,0 +1,144 @@
+import { useState } from "react";
+
+export default function LeaveModal({ isOpen, onClose, onSubmit }) {
+  const [formData, setFormData] = useState({
+    type: "CL",
+    startDate: "",
+    endDate: "",
+    reason: "",
+    duration: "",
+  });
+
+  if (!isOpen) return null;
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Validation Logic
+    if (formData.type === "Permission") {
+      if (!formData.duration || !formData.reason) {
+        alert("Please fill Duration and Reason");
+        return;
+      }
+    } else {
+      if (!formData.startDate || !formData.endDate || !formData.reason) {
+        alert("Please fill Start Date, End Date, and Reason");
+        return;
+      }
+    }
+
+    onSubmit(formData);
+    // REMOVED onClose() HERE!
+    // We let the parent close it only IF successful.
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+        <h2 className="text-xl font-bold text-blue-900 mb-4">
+          Apply for Leave
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Leave Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Leave Type
+            </label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full border rounded p-2 mt-1"
+            >
+              <option value="CL">CL (Casual Leave)</option>
+              <option value="SL">SL (Sick Leave)</option>
+              <option value="EL">EL (Earned Leave)</option>
+              <option value="OD">OD (On Duty)</option>
+              <option value="Permission">Permission (Hourly)</option>
+            </select>
+          </div>
+
+          {/* Conditional Inputs */}
+          {formData.type === "Permission" ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Duration
+              </label>
+              <input
+                type="text"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                className="w-full border rounded p-2 mt-1"
+                placeholder="2 hours"
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  className="w-full border rounded p-2 mt-1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  className="w-full border rounded p-2 mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Reason */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Reason
+            </label>
+            <textarea
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              className="w-full border rounded p-2 mt-1"
+              rows="3"
+            ></textarea>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end space-x-3 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+            >
+              Submit Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
