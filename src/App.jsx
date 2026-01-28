@@ -5,21 +5,16 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Toaster } from "react-hot-toast"; // 1. IMPORT THIS
 import Login from "./pages/Login";
 import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import ForgotPassword from "./pages/ForgotPassword"; // 1. IMPORT THIS
+import ForgotPassword from "./pages/ForgotPassword";
 
 // PROTECTED ROUTE COMPONENT
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user } = useAuth();
-
-  // 1. If not logged in, kick them to Login
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  // 2. If logged in but wrong role, kick them back
+  if (!user) return <Navigate to="/login" />;
   if (allowedRole && user.role !== allowedRole) {
     return user.role === "admin" ? (
       <Navigate to="/admin-dashboard" />
@@ -27,8 +22,6 @@ const ProtectedRoute = ({ children, allowedRole }) => {
       <Navigate to="/faculty-dashboard" />
     );
   }
-
-  // 3. If all good, show the page
   return children;
 };
 
@@ -36,14 +29,14 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
+        {/* 2. ADD THE TOASTER HERE (Configured for top-center) */}
+        <Toaster position="top-center" reverseOrder={false} />
+
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
-
-          {/* NEW FORGOT PASSWORD ROUTE */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* FACULTY ROUTE */}
           <Route
             path="/faculty-dashboard"
             element={
@@ -53,7 +46,6 @@ export default function App() {
             }
           />
 
-          {/* ADMIN ROUTE */}
           <Route
             path="/admin-dashboard"
             element={

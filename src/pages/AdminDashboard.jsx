@@ -13,6 +13,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import EditBalanceModal from "../components/EditBalanceModal";
+import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -77,78 +78,114 @@ export default function AdminDashboard() {
   }, []);
 
   // --- ACTIONS ---
-  const handleAction = async (id, action) => {
-    if (!confirm(`Are you sure you want to ${action}?`)) return;
+  // --- ACTIONS (WITH TOAST CONFIRMATION) ---
+  const handleAction = (id, action) => {
+    // 1. We create the function that actually does the work
+    const executeAction = async () => {
+      try {
+        // Dismiss the confirmation toast immediately
+        toast.dismiss(id);
 
-    try {
-      await updateDoc(doc(db, "leaves", id), { status: action });
+        // Update Status
+        await updateDoc(doc(db, "leaves", id), { status: action });
 
-      if (action === "Approved") {
-        const leaveDoc = leaves.find((l) => l.id === id);
-        if (!leaveDoc) return;
+        // IF APPROVED -> DEDUCT BALANCE
+        if (action === "Approved") {
+          const leaveDoc = leaves.find((l) => l.id === id);
+          if (!leaveDoc) return;
 
-        // DEDUCTION LOGIC
-        const userRef = doc(db, "users", leaveDoc.userId);
-        const userSnap = await getDoc(userRef);
+          const userRef = doc(db, "users", leaveDoc.userId);
+          const userSnap = await getDoc(userRef);
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          let currentBalances = userData.leaveBalances || {
-            CL: 0,
-            SL: 0,
-            EL: 0,
-            OD: 0,
-            Permission: 0,
-          };
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            let currentBalances = userData.leaveBalances || {
+              CL: 0,
+              SL: 0,
+              EL: 0,
+              OD: 0,
+              Permission: 0,
+            };
 
-          let cost = 0;
-          if (leaveDoc.type === "Permission") {
-            cost = 1;
-          } else {
-            const start = new Date(leaveDoc.startDate);
-            const end = new Date(leaveDoc.endDate);
-            const diffTime = Math.abs(end - start);
-            cost = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            let cost = 0;
+            if (leaveDoc.type === "Permission") {
+              cost = 1;
+            } else {
+              const start = new Date(leaveDoc.startDate);
+              const end = new Date(leaveDoc.endDate);
+              const diffTime = Math.abs(end - start);
+              cost = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
+
+            let typeKey = leaveDoc.type;
+            if (currentBalances[typeKey] !== undefined) {
+              currentBalances[typeKey] = currentBalances[typeKey] - cost;
+              await updateDoc(userRef, { leaveBalances: currentBalances });
+              setStaffList((prev) =>
+                prev.map((s) =>
+                  s.id === leaveDoc.userId
+                    ? { ...s, leaveBalances: currentBalances }
+                    : s,
+                ),
+              );
+              toast.success(`Approved! Deducted ${cost} ${typeKey}.`);
+            } else {
+              toast.error(`Approved, but unknown Leave Type: ${typeKey}`);
+            }
           }
 
-          let typeKey = leaveDoc.type;
-          if (currentBalances[typeKey] !== undefined) {
-            currentBalances[typeKey] = currentBalances[typeKey] - cost;
-            await updateDoc(userRef, { leaveBalances: currentBalances });
-            setStaffList((prev) =>
-              prev.map((s) =>
-                s.id === leaveDoc.userId
-                  ? { ...s, leaveBalances: currentBalances }
-                  : s,
-              ),
+          // CONFLICT LOGIC
+          const today = getTodayString();
+          if (leaveDoc.startDate <= today && leaveDoc.endDate >= today) {
+            const attendanceRef = doc(
+              db,
+              "attendance",
+              `${leaveDoc.userId}_${today}`,
             );
-            alert(`Approved! Deducted ${cost} ${typeKey}.`);
-          } else {
-            alert(`Approved, but unknown Leave Type: ${typeKey}`);
+            const attSnap = await getDoc(attendanceRef);
+            if (attSnap.exists() && attSnap.data().status === "Present") {
+              await updateDoc(attendanceRef, { status: "On Leave" });
+              toast("User was marked Present. Changed to 'On Leave'.", {
+                icon: "⚠️",
+              });
+            }
           }
         }
-
-        // CONFLICT LOGIC
-        const today = getTodayString();
-        if (leaveDoc.startDate <= today && leaveDoc.endDate >= today) {
-          const attendanceRef = doc(
-            db,
-            "attendance",
-            `${leaveDoc.userId}_${today}`,
-          );
-          const attSnap = await getDoc(attendanceRef);
-          if (attSnap.exists() && attSnap.data().status === "Present") {
-            await updateDoc(attendanceRef, { status: "On Leave" });
-            alert(`Note: User marked Present. Changed to 'On Leave'.`);
-          }
-        }
+      } catch (e) {
+        console.error(e);
+        toast.error("Action failed.");
       }
-    } catch (e) {
-      console.error(e);
-      alert("Action failed.");
-    }
-  };
+    };
 
+    // 2. We Trigger the "Custom Toast" with Buttons
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <p className="font-medium text-sm text-gray-800">
+            Are you sure you want to <b>{action}</b> this?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 text-xs text-gray-500 border rounded hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id); // Close the question
+                executeAction(); // Run the code
+              }}
+              className={`px-3 py-1 text-xs text-white rounded font-bold shadow-sm ${action === "Approved" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
+            >
+              Yes, {action}
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 5000, id: id },
+    ); // Use ID to prevent duplicates
+  };
   const handleSaveBalance = async (staffId, newBalances) => {
     try {
       await updateDoc(doc(db, "users", staffId), {
@@ -159,9 +196,14 @@ export default function AdminDashboard() {
           s.id === staffId ? { ...s, leaveBalances: newBalances } : s,
         ),
       );
-      alert("Updated!");
+
+      // OLD: alert("Updated!");
+      // NEW:
+      toast.success("Balances updated successfully!");
     } catch (e) {
-      alert("Failed.");
+      // OLD: alert("Failed.");
+      // NEW:
+      toast.error("Failed to update balance.");
     }
   };
 
