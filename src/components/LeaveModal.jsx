@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast"; // Ensure this is imported
 
 export default function LeaveModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -18,27 +19,26 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation Logic
+    // VALIDATION LOGIC (Now using Toast)
     if (formData.type === "Permission") {
       if (!formData.duration || !formData.reason) {
-        alert("Please fill Duration and Reason");
+        toast.error("Please fill Duration and Reason");
         return;
       }
     } else {
       if (!formData.startDate || !formData.endDate || !formData.reason) {
-        alert("Please fill Start Date, End Date, and Reason");
+        toast.error("Please fill Start Date, End Date, and Reason");
         return;
       }
     }
 
+    // Success! Send data to parent.
     onSubmit(formData);
-    // REMOVED onClose() HERE!
-    // We let the parent close it only IF successful.
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl transform transition-all scale-100">
         <h2 className="text-xl font-bold text-blue-900 mb-4">
           Apply for Leave
         </h2>
@@ -53,7 +53,7 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="w-full border rounded p-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="CL">CL (Casual Leave)</option>
               <option value="SL">SL (Sick Leave)</option>
@@ -74,8 +74,8 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                className="w-full border rounded p-2 mt-1"
-                placeholder="2 hours"
+                className="w-full border rounded p-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="e.g. 2 hours"
               />
             </div>
           ) : (
@@ -89,7 +89,7 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  className="w-full border rounded p-2 mt-1"
+                  className="w-full border rounded p-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
               <div>
@@ -101,7 +101,7 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleChange}
-                  className="w-full border rounded p-2 mt-1"
+                  className="w-full border rounded p-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
@@ -116,23 +116,24 @@ export default function LeaveModal({ isOpen, onClose, onSubmit }) {
               name="reason"
               value={formData.reason}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="w-full border rounded p-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none"
               rows="3"
+              placeholder="Briefly describe why..."
             ></textarea>
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end space-x-3 mt-4">
+          <div className="flex justify-end space-x-3 mt-4 pt-2 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+              className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800 shadow transition"
             >
               Submit Request
             </button>

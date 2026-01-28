@@ -6,32 +6,24 @@ export default function EditBalanceModal({
   currentUser,
   onSave,
 }) {
-  // Default structure if user has no data yet
   const [balances, setBalances] = useState({
-    CL: 12,
-    SL: 5,
+    CL: 0,
+    SL: 0,
+    OD: 0,
     EL: 0,
-    OD: 10,
-    Permission: 2,
+    Permission: 0,
   });
 
-  // Load user's existing data when modal opens
   useEffect(() => {
     if (currentUser?.leaveBalances) {
       setBalances(currentUser.leaveBalances);
-    } else {
-      // Reset to defaults if new user
-      setBalances({ CL: 12, SL: 5, EL: 0, OD: 10, Permission: 2 });
     }
   }, [currentUser]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !currentUser) return null;
 
   const handleChange = (e) => {
-    setBalances({
-      ...balances,
-      [e.target.name]: parseInt(e.target.value) || 0,
-    });
+    setBalances({ ...balances, [e.target.name]: Number(e.target.value) });
   };
 
   const handleSubmit = (e) => {
@@ -41,92 +33,42 @@ export default function EditBalanceModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
-        <h2 className="text-xl font-bold text-blue-900 mb-4">
-          Manage Leave Balance
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Editing for:{" "}
-          <span className="font-bold text-gray-800">{currentUser?.name}</span>
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-800">Edit Balances</h2>
+          <p className="text-xs text-gray-500">{currentUser.name}</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase">
-                Casual (CL)
-              </label>
-              <input
-                type="number"
-                name="CL"
-                value={balances.CL}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase">
-                Sick (SL)
-              </label>
-              <input
-                type="number"
-                name="SL"
-                value={balances.SL}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase">
-                Earned (EL)
-              </label>
-              <input
-                type="number"
-                name="EL"
-                value={balances.EL}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase">
-                On Duty (OD)
-              </label>
-              <input
-                type="number"
-                name="OD"
-                value={balances.OD}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
+            {["CL", "SL", "OD", "EL", "Permission"].map((type) => (
+              <div key={type}>
+                <label className="block text-xs font-bold text-gray-500 mb-1">
+                  {type}
+                </label>
+                <input
+                  type="number"
+                  name={type}
+                  value={balances[type] || 0}
+                  onChange={handleChange}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-light outline-none font-mono"
+                />
+              </div>
+            ))}
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase">
-              Permissions (Count)
-            </label>
-            <input
-              type="number"
-              name="Permission"
-              value={balances.Permission}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 mt-6">
+          <div className="flex justify-end space-x-3 pt-4 mt-2 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-dark text-sm font-bold shadow-sm"
             >
               Save Changes
             </button>
