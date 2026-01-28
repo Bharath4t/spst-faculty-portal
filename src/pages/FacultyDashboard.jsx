@@ -13,6 +13,7 @@ import {
   where,
   onSnapshot,
   serverTimestamp,
+  getDocs,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
 
@@ -28,7 +29,10 @@ export default function FacultyDashboard() {
   const [myLeaves, setMyLeaves] = useState([]);
   const [liveProfile, setLiveProfile] = useState(null);
 
-  // --- HELPER: GET INITIALS (Keep this for the circle icon) ---
+  // NEW: State for the Weekly Graph
+  const [weeklyStats, setWeeklyStats] = useState([]);
+
+  // --- HELPER: GET INITIALS ---
   const getInitials = (name) => {
     return (
       name
@@ -48,6 +52,25 @@ export default function FacultyDashboard() {
     return `${year}-${month}-${day}`;
   };
 
+  // --- NEW: CALCULATE LAST 7 DAYS ---
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+
+      days.push({
+        dateStr: `${year}-${month}-${day}`,
+        dayName: d.toLocaleDateString("en-US", { weekday: "short" }), // "Mon", "Tue"
+        dayNum: d.getDate(), // 28, 29
+      });
+    }
+    return days;
+  };
+
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(doc(db, "users", user.uid), (doc) =>
@@ -59,13 +82,31 @@ export default function FacultyDashboard() {
   useEffect(() => {
     const checkAttendance = async () => {
       if (!user) return;
-      const docSnap = await getDoc(
+
+      // 1. Check Today
+      const todayDoc = await getDoc(
         doc(db, "attendance", `${user.uid}_${getTodayString()}`),
       );
-      if (docSnap.exists()) setAttendanceMarked(true);
+      if (todayDoc.exists()) setAttendanceMarked(true);
+
+      // 2. Build Weekly Data
+      const last7 = getLast7Days();
+      const stats = [];
+
+      for (const day of last7) {
+        // We check each day individually (simple and robust for small range)
+        const docRef = doc(db, "attendance", `${user.uid}_${day.dateStr}`);
+        const docSnap = await getDoc(docRef);
+
+        stats.push({
+          ...day,
+          status: docSnap.exists() ? "Present" : "Absent",
+        });
+      }
+      setWeeklyStats(stats);
     };
     checkAttendance();
-  }, [user]);
+  }, [user, attendanceMarked]); // Re-run if they mark attendance today
 
   useEffect(() => {
     if (!user) return;
@@ -222,11 +263,9 @@ export default function FacultyDashboard() {
       {/* 1. BRAND HEADER */}
       <nav className="bg-brand text-white px-5 py-4 flex justify-between items-center shadow-md sticky top-0 z-20">
         <div className="flex items-center gap-3 overflow-hidden">
-          {/* Avatar Circle */}
           <div className="h-10 w-10 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-sm font-bold border border-white/20 shadow-inner">
             {getInitials(user?.name)}
           </div>
-          {/* Text Area */}
           <div className="min-w-0">
             <h1 className="text-xs font-bold text-blue-200 tracking-wider uppercase">
               SPST Faculty
@@ -236,7 +275,6 @@ export default function FacultyDashboard() {
             </p>
           </div>
         </div>
-
         <button
           onClick={logout}
           className="text-xs bg-brand-dark px-3 py-1.5 rounded border border-blue-800 hover:bg-blue-900 transition shadow-sm font-medium flex-shrink-0 ml-2"
@@ -304,7 +342,53 @@ export default function FacultyDashboard() {
           )}
         </div>
 
-        {/* 3. SMART LEAVE WALLET */}
+        {/* 3. NEW: WEEKLY ATTENDANCE GRAPH */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-surface-border">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 px-1">
+            Weekly Overview
+          </h3>
+          <div className="flex justify-between items-end h-24 px-2">
+            {weeklyStats.map((stat, index) => {
+              // Determine bar styling
+              const isPresent = stat.status === "Present";
+              const isToday = index === 6; // Last item is always today
+
+              return (
+                <div
+                  key={stat.dateStr}
+                  className="flex flex-col items-center gap-2 group relative"
+                >
+                  {/* BAR */}
+                  <div
+                    className={`w-2.5 sm:w-3 rounded-full transition-all duration-500 ${
+                      isPresent
+                        ? "h-16 bg-green-500 shadow-green-200 shadow-md"
+                        : "h-16 bg-gray-100" // Absent bar is full height but gray (or make it short 'h-4' if you prefer "empty" look)
+                    }`}
+                    style={{
+                      height: isPresent ? "64px" : "12px", // Dynamic height: Tall for present, Short dot for absent
+                      backgroundColor: isPresent ? "#22c55e" : "#f3f4f6",
+                    }}
+                  ></div>
+
+                  {/* DAY NAME */}
+                  <span
+                    className={`text-[10px] font-bold ${isToday ? "text-brand" : "text-gray-400"}`}
+                  >
+                    {stat.dayName}
+                  </span>
+
+                  {/* TOOLTIP (Only visible on hover/press) */}
+                  <div className="absolute bottom-full mb-1 bg-gray-800 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
+                    {stat.status}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. SMART LEAVE WALLET */}
         <div>
           <div className="flex justify-between items-end mb-3 px-1">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -367,7 +451,7 @@ export default function FacultyDashboard() {
           </div>
         </div>
 
-        {/* 4. HISTORY */}
+        {/* 5. HISTORY */}
         <div>
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
             Request History
