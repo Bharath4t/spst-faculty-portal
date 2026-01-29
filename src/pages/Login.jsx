@@ -41,8 +41,12 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 text-center p-12 text-white max-w-lg">
-          <div className="h-20 w-20 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/20 shadow-2xl">
-            <span className="text-3xl font-bold">SP</span>
+          <div className="mb-6 flex justify-center">
+            <img
+              src="/logo.png"
+              alt="SPST Logo"
+              className="h-24 w-24 object-contain"
+            />
           </div>
           <h1 className="text-4xl font-bold mb-4 tracking-tight">
             SPST Portal
@@ -59,8 +63,12 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12 relative">
         {/* Mobile Header (Only shows on small screens) */}
         <div className="lg:hidden mb-8 text-center">
-          <div className="inline-block h-12 w-12 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold mb-3 shadow-md">
-            SP
+          <div className="flex justify-center mb-3">
+            <img
+              src="/logo.png"
+              alt="SPST Logo"
+              className="h-16 w-16 object-contain"
+            />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">SPST Portal</h2>
         </div>

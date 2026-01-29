@@ -138,29 +138,52 @@ export default function FacultyDashboard() {
 
     toast(
       (t) => (
-        <div className="flex flex-col gap-2 max-w-xs">
-          <p className="font-medium text-sm text-gray-800">{warningText}</p>
-          <div className="flex gap-2 justify-end">
+        <div className="flex flex-col gap-3 bg-white p-2 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-100 p-2 rounded-full">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-red-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-sm">
+                Delete Request?
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5 max-w-[200px]">
+                {warningText}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end pt-1">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1 text-xs text-gray-500 border rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded transition"
             >
-              No
+              Cancel
             </button>
             <button
               onClick={() => {
                 toast.dismiss(t.id);
                 executeDelete();
               }}
-              className="px-3 py-1 text-xs text-white bg-red-600 rounded font-bold shadow-sm hover:bg-red-700"
+              className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-sm transition"
             >
               Yes, Delete
             </button>
           </div>
         </div>
       ),
-      { duration: 6000 },
-    );
+      { duration: Infinity, id: id },
+    ); // Keep 'Infinity' so it waits for user input
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -263,9 +286,11 @@ export default function FacultyDashboard() {
       {/* 1. BRAND HEADER */}
       <nav className="bg-brand text-white px-5 py-4 flex justify-between items-center shadow-md sticky top-0 z-20">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-sm font-bold border border-white/20 shadow-inner">
-            {getInitials(user?.name)}
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="h-10 w-10 object-contain"
+          />
           <div className="min-w-0">
             <h1 className="text-xs font-bold text-blue-200 tracking-wider uppercase">
               SPST Faculty

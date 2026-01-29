@@ -30,8 +30,46 @@ export default function App() {
     <AuthProvider>
       <Router>
         {/* 2. ADD THE TOASTER HERE (Configured for top-center) */}
-        <Toaster position="top-center" reverseOrder={false} />
-
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          gutter={8}
+          toastOptions={{
+            duration: 2000, // Auto-close after 2 seconds
+            style: {
+              background: "#fff", // Default white background
+              color: "#333", // Dark text
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", // Nice shadow
+              padding: "12px 16px",
+              borderRadius: "10px",
+              fontWeight: "500",
+              fontSize: "14px",
+            },
+            success: {
+              iconTheme: {
+                primary: "#16a34a", // Professional Green
+                secondary: "white",
+              },
+              style: {
+                border: "1px solid #dcfce7", // Subtle green border
+                background: "#f0fdf4", // Very light green background
+                color: "#166534", // Dark green text
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: "#ef4444",
+                secondary: "white",
+              },
+              style: {
+                border: "1px solid #fee2e2",
+                background: "#fef2f2",
+                color: "#991b1b",
+              },
+            },
+          }}
+        />
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />

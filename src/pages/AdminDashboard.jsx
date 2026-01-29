@@ -218,14 +218,52 @@ export default function AdminDashboard() {
 
     toast(
       (t) => (
-        <div className="flex flex-col gap-2">
-          <p className="font-medium text-sm text-gray-800">
-            Are you sure you want to <b>{action}</b> this?
-          </p>
-          <div className="flex gap-2 justify-end">
+        <div className="flex flex-col gap-3 bg-white p-1">
+          <div className="flex items-start gap-3">
+            <div
+              className={`p-2 rounded-full ${action === "Approved" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+            >
+              {action === "Approved" ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-sm">
+                Confirm Action
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Are you sure you want to <b>{action}</b> this request?
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end mt-1">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1 text-xs text-gray-500 border rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded"
             >
               Cancel
             </button>
@@ -234,7 +272,7 @@ export default function AdminDashboard() {
                 toast.dismiss(t.id);
                 executeAction();
               }}
-              className={`px-3 py-1 text-xs text-white rounded font-bold shadow-sm ${action === "Approved" ? "bg-green-600" : "bg-red-600"}`}
+              className={`px-4 py-1.5 text-xs text-white rounded font-bold shadow-sm ${action === "Approved" ? "bg-green-600" : "bg-red-600"}`}
             >
               Yes, {action}
             </button>
@@ -430,9 +468,11 @@ export default function AdminDashboard() {
       {/* HEADER */}
       <nav className="bg-white border-b border-surface-border px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-brand rounded-lg flex items-center justify-center text-white font-bold">
-            SP
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="h-10 w-10 object-contain"
+          />
           <div>
             <h1 className="text-lg font-bold text-gray-900 tracking-tight leading-none">
               Admin Console

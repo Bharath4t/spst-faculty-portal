@@ -57,9 +57,19 @@ export default function AddStaffModal({ isOpen, onClose, onUserAdded }) {
       if (onUserAdded) onUserAdded();
       onClose();
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Error adding staff:", error);
+
+      // NEW: Specific handling for "Email Taken"
+      if (error.code === "auth/email-already-in-use") {
+        alert(
+          "⚠️ Ghost User Detected!\n\nThis email is already in Firebase Authentication, but not in your Database.\n\nSOLUTION:\nGo to Firebase Console -> Authentication and manually delete this email before trying again.",
+        );
+      } else {
+        alert("Failed: " + error.message);
+      }
     } finally {
       setLoading(false);
+      // secondaryApp is garbage collected automatically
     }
   };
 
